@@ -6,7 +6,7 @@ app.use(express.json());
 
 mongoose.connect('mongodb+srv://rssmp120:rohan3046@cluster0.nsofrmr.mongodb.net/Kodespehere');
 
-const devices=mongoose.model('devices',{
+const Device=mongoose.model('devices',{
     teamid:String,
     device:String,
     value:Number
@@ -22,9 +22,15 @@ app.post('/devices', async (req, res) => {
     switch (device) {
         case 'fan':
             if (value >= 0 && value <= 5) {
+                const newdevice=new Device({
+                    teamid:teamid,
+                    device:device,
+                    value:value
+                }) 
+                await newdevice.save();
                 // Control the speed of the fan
                 // Implementation logic for controlling fan speed
-                res.send({ msg: `Fan speed set to ${value}` });
+                res.json({ msg: `Fan speed set to ${value}` });
             } else {
                 res.status(400).send({ msg: "Invalid value for fan speed" });
             }
