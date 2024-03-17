@@ -1,55 +1,53 @@
 const express = require('express');
 const fetch = require('node-fetch');
+
 const app = express();
 const port = 3000;
+
 app.use(express.json());
 
-app.post('/devices', async (req, res) => {
-    const { teamid, device, value } = req.body;
-
-    // Construct the request payload
-    const payload = {
-        teamid: teamid,
-        device: device,
-        value: value
-    };
-
+// Function to add a device
+async function addDevice(teamid, device, value) {
     try {
-        // Send POST request to the external API
-        const response = await fetch('https://kodessphere-api.vercel.app', {
+        const response = await fetch('https://kodessphere-api.vercel.app/devices', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                teamid,
+                device,
+                value
+            })
         });
-
-        // Check if the request was successful
-        if (response.ok) {
-            const data = await response.json();
-            res.send(data);
-        } else {
-            throw new Error('Failed to send data to the external API');
-        }
+        const data = await response.json();
+        return data;
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ msg: 'Internal server error' });
+        console.error('Error:', error);
+        throw error;
+    }
+}
+
+// Endpoint to add devices
+app.post('/devices', async (req, res) => {
+    const { teamid, device, value } = req.body;
+    try {
+        const response = await addDevice(teamid, device, value);
+        res.status(201).json(response);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// Endpoint to fetch data from the external API
-app.get('/external-api', async (req, res) => {
+// Endpoint to fetch all device data
+app.get('/devices', async (req, res) => {
     try {
-        const response = await fetch('https://kodessphere-api.vercel.app');
-        if (response.ok) {
-            const data = await response.json();
-            res.send(data);
-        } else {
-            throw new Error('Failed to fetch data from the external API');
-        }
+        const response = await fetch('https://kodessphere-api.vercel.app/devices');
+        const data = await response.json();
+        res.status(200).json(data);
     } catch (error) {
-        console.error(error);
-        res.status(500).send({ msg: 'Internal server error' });
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

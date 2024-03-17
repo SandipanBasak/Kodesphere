@@ -2,6 +2,7 @@
   "dependencies": {
     "express": "^4.18.3",
     "mongoose": "^8.2.2",
-    "node": "^21.7.1"
+    "node": "^21.7.1",
+    "node-fetch": "^3.3.2"
   }
 }
