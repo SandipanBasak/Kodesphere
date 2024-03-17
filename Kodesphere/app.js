@@ -1,83 +1,35 @@
-const express=require('express');
- const mongoose=require('mongoose');
-const app=express();
-const port=3000;
+const express = require('express');
+const fetch = require('node-fetch');
+const app = express();
+const port = 3000;
 app.use(express.json());
 
-mongoose.connect('mongodb+srv://rssmp120:rohan3046@cluster0.nsofrmr.mongodb.net/Kodespehere');
-
-const Device=mongoose.model('devices',{
-    teamid:String,
-    device:String,
-    value:Number
-});
-
-
 app.post('/devices', async (req, res) => {
-    const teamid = req.body.teamid;
-    const device = req.body.device;
-    const value = req.body.value;
-     
-    
-    switch (device) {
-        case 'fan':
-            if (value >= 0 && value <= 5) {
-                const newdevice=new Device({
-                    teamid:teamid,
-                    device:device,
-                    value:value
-                }) 
-                await newdevice.save();
-                // Control the speed of the fan
-                // Implementation logic for controlling fan speed
-                res.json({ msg: `Fan speed set to ${value}` });
-            } else {
-                res.status(400).send({ msg: "Invalid value for fan speed" });
-            }
-            break;
-        
-        case 'bulb':
-            if (value === 0 || value === 1) {
-                // Turn on or off the bulb
-                // Implementation logic for turning on/off the bulb
-                res.send({ msg: `Bulb turned ${value === 1 ? 'on' : 'off'}` });
-            } else {
-                res.status(400).send({ msg: "Invalid value for bulb (0 for off, 1 for on)" });
-            }
-            break;
-        
-        case 'led':
-            // Control the color of the LED
-            // Implementation logic for controlling LED color
-            // Note: You need to parse the color value from string format "#RRGGBB"
-            res.send({ msg: `LED color set to ${value}` });
-            break;
-        
-        case 'ac':
-            // Control the AC temperature and state
-            if (typeof value === 'object' && 'temp' in value && 'state' in value) {
-                // Implementation logic for controlling AC temperature and state
-                res.send({ msg: `AC temperature set to ${value.temp}°C, state ${value.state === 1 ? 'on' : 'off'}` });
-            } else {
-                res.status(400).send({ msg: "Invalid value for AC" });
-            }
-            break;
-        
-        default:
-            res.status(400).send({ msg: "Invalid device type" });
-            break;
-    }
-})
+    const { teamid, device, value } = req.body;
 
-app.get(`/devices/teamid`, async (req, res) => {
-    const teamid = req.params.id;
+    // Construct the request payload
+    const payload = {
+        teamid: teamid,
+        device: device,
+        value: value
+    };
 
     try {
-        const device = await devices.findOne({ teamid });
-        if (!device) {
-            res.status(404).send({ msg: "Device not found" });
+        // Send POST request to the external API
+        const response = await fetch('https://kodessphere-api.vercel.app', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        // Check if the request was successful
+        if (response.ok) {
+            const data = await response.json();
+            res.send(data);
         } else {
-            res.send(device);
+            throw new Error('Failed to send data to the external API');
         }
     } catch (error) {
         console.error(error);
@@ -85,8 +37,22 @@ app.get(`/devices/teamid`, async (req, res) => {
     }
 });
 
+// Endpoint to fetch data from the external API
+app.get('/external-api', async (req, res) => {
+    try {
+        const response = await fetch('https://kodessphere-api.vercel.app');
+        if (response.ok) {
+            const data = await response.json();
+            res.send(data);
+        } else {
+            throw new Error('Failed to fetch data from the external API');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ msg: 'Internal server error' });
+    }
+});
 
-
-app.listen(port,()=>{
-    console.log(`Server is Running on port ${port}`);
-})
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
