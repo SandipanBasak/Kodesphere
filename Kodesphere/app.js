@@ -5,7 +5,7 @@ const app = express();
 const port = 3000;
 
 app.use(express.json());
-
+const id='YpTtc0b';
 // Function to add a device
 async function addDevice(teamid, device, value) {
     try {
@@ -40,7 +40,7 @@ app.post('/devices', async (req, res) => {
 });
 
 // Endpoint to fetch all device data
-app.get('/devices', async (req, res) => {
+app.get(`/devices/${id}`, async (req, res) => {
     try {
         const response = await fetch('https://kodessphere-api.vercel.app/devices');
         const data = await response.json();
